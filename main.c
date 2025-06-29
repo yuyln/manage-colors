@@ -186,7 +186,6 @@ int main(int argc, const char **argv) {
         yu_assert(!(it->color.rgba == LONG_MIN || it->color.rgba == LONG_MAX), "Convertion to hex failed");
 
         it->out_format = (yu_sv){.str = file + sep_idxs.items[i + 4], .len = sep_idxs.items[i + 5] - sep_idxs.items[i + 4]};
-
     }
 
     char *file_in = read_entire_file(to_change_dir, &file_size);
@@ -240,3 +239,5 @@ end:
     fclose(fout);
     return ret;
 }
+
+//TODO: Proper tokenizer to avoid things like `color1color2 color3` -> `RGBARGBA RGBA`. It should be `color1color2 RGBA`.
