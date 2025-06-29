@@ -128,7 +128,7 @@ typedef struct {
     size_t cap;
 } Options;
 
-char sep[] = "\n :,\0\r\t";
+char sep[] = "\n :,\0\r\t()";
 size_t sep_len = sizeof(sep) / sizeof(*sep);
 int TOKEN_SKIP = 3;
 
@@ -192,12 +192,7 @@ int main(int argc, const char **argv) {
     FILE *fout = fopen(output_dir, "w");
     StringBuilder file_out = {0};
 
-    for (size_t i = 0; i < file_size;) {
-        while (char_in_string(file_in[i], sep, sep_len)) {
-            yu_da_append(&file_out, file_in[i]);
-            ++i;
-        }
-
+    for (size_t i = 0; i < file_size; ++i) {
         for (size_t j = 0; j < options.len; ++j) {
             Option it = options.items[j];
 
@@ -210,9 +205,11 @@ int main(int argc, const char **argv) {
             }
 
             if (strncmp(it.out_format.str, "hex", it.out_format.len) == 0) {
-                sb_cat_fmt(&file_out, "#%08X", it.color.rgba);
+                sb_cat_fmt(&file_out, "#%08x", it.color.rgba);
             } else if (strncmp(it.out_format.str, "rgba", it.out_format.len) == 0) {
                 sb_cat_fmt(&file_out, "rgba(%d,%d,%d,%d)", it.color.r, it.color.g, it.color.b, it.color.a);
+            } else if (strncmp(it.out_format.str, "hexrgba", it.out_format.len) == 0) {
+                sb_cat_fmt(&file_out, "rgba(%08x)", it.color.rgba);
             } else if (strncmp(it.out_format.str, "frgba", it.out_format.len) == 0) {
                 sb_cat_fmt(&file_out, "rgba(%f,%f,%f,%f)", it.color.r / 255.0, it.color.g / 255.0, it.color.b / 255.0, it.color.a / 255.0);
             } else {
@@ -222,14 +219,10 @@ int main(int argc, const char **argv) {
             }
             i += it.str_color.len; //skips the portion that corresponds to the color string in the color table
         }
-
-        while (!char_in_string(file_in[i], sep, sep_len)) {
-            yu_da_append(&file_out, file_in[i]);
-            ++i;
-        }
+        yu_da_append(&file_out, file_in[i]);
     }
 
-    fwrite(file_out.items, file_out.len, 1, fout);
+    fwrite(file_out.items, file_out.len - 1, 1, fout);
 end:
     free(file_out.items);
     free(options.items);
