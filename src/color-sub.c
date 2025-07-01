@@ -10,6 +10,14 @@
 #define __YUTILS_C_
 #include "yutils.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define mkdir _mkdir
+#else
+#include <sys/stat.h>
+#endif
+
 //https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h
 #define nob_shift(xs, xs_sz) ((xs_sz)--, *(xs)++)
 
@@ -51,6 +59,32 @@ bool char_in_string(char c, char *str, size_t str_len) {
         if (str[i] == c) return true;
     }
     return false;
+}
+
+int create_dir_tree(const char *path) {
+    yu_sb path_to_mkdir = {0};
+    char *head = strchr(path, '/');
+    while (head != NULL) {
+        path_to_mkdir.len = 0;
+        size_t len = head - path;
+        if (len == 0) {
+            head = strchr(head + 1, '/');
+            continue;
+        }
+        yu_sb_cat_fmt(&path_to_mkdir, "%.*s", (int)len, path);
+        head = strchr(head + 1, '/');
+        if (mkdir(yu_sb_as_cstr(&path_to_mkdir), S_IRWXU | S_IRWXG | S_IROTH) < 0) {
+            if (errno == EEXIST && head == NULL) {
+                yu_error("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
+            }
+            if (errno != EEXIST) {
+                yu_error("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
+                return errno;
+            }
+        }
+    }
+    yu_free(path_to_mkdir.items);
+    return 0;
 }
 
 int main(int argc, const char **argv) {
@@ -95,7 +129,16 @@ int main(int argc, const char **argv) {
     }
 
     char *file_in = yu_read_entire_file(to_change_dir, &file_size);
-    FILE *fout = yu_fopen(output_dir, "w");
+    {
+        char *last_part = strrchr(output_dir, '/') + 1;
+        size_t len = last_part - output_dir;
+        yu_sb base_path = {0};
+        yu_sb_cat_fmt(&base_path, "%.*s", (int)len, output_dir);
+        create_dir_tree(yu_sb_as_cstr(&base_path));
+        yu_free(base_path.items);
+    }
+    FILE *fout = yu_fopen(output_dir, "wb");
+    yu_assert(fout != NULL, "Could not open output_dir");
     yu_sb file_out = {0};
 
     for (size_t i = 0; i < file_size; ++i) {
@@ -128,7 +171,6 @@ int main(int argc, const char **argv) {
     }
 
     fwrite(file_out.items, file_out.len - 1, 1, fout);
-defer:
     yu_free(file_out.items);
     yu_free(options.items);
     yu_free(file_in);

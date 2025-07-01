@@ -503,7 +503,7 @@ void yu_sb_cat_sb(yu_sb *sb, const yu_sb sb2) {
 }
 
 const char* yu_sb_as_cstr(yu_sb *sb) {
-    if (sb->items[sb->len - 1] != '\0')
+    if (sb->items == NULL || sb->len == 0 || sb->items[sb->len - 1] != '\0')
         yu_da_append(sb, '\0');
     return sb->items;
 }
