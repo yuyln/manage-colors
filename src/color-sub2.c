@@ -65,7 +65,7 @@ int create_dir_tree(const char *path) {
         head = strchr(head + 1, '/');
         if (mkdir(yu_sb_as_cstr(&path_to_mkdir), S_IRWXU | S_IRWXG | S_IROTH) < 0) {
             if (errno == EEXIST && head == NULL) {
-                yu_error("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
+                yu_warn("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
             }
             if (errno != EEXIST) {
                 yu_error("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
@@ -259,16 +259,49 @@ int main(int argc, const char **argv) {
         ptr += line.len + 1;
         Entry entry = parse_entry(&line);
         yu_da_append(&table, entry);
-
-        yu_log("ident = %.*s  |  color = (%d %d %d %d)  |  trans = %s",
-               YU_SV_ARG(entry.identifier),
-               entry.color.r, entry.color.g, entry.color.b, entry.color.a,
-               entry.formatted_color);
     }
+
+    char *file_in = yu_read_entire_file(to_change_dir, &file_size);
+    {
+        char *last_part = strrchr(output_dir, '/') + 1;
+        size_t len = last_part - output_dir;
+        yu_sb base_path = {0};
+        yu_sb_cat_fmt(&base_path, "%.*s", (int)len, output_dir);
+        create_dir_tree(yu_sb_as_cstr(&base_path));
+        yu_free(base_path.items);
+    }
+    FILE *fout = yu_fopen(output_dir, "wb");
+    yu_assert(fout != NULL, "Could not open output_dir");
+    yu_sb file_out = {0};
+
+    for (size_t i = 0; i < file_size; ++i) {
+        for (size_t j = 0; j < table.len; ++j) {
+            Entry it = table.items[j];
+
+            if (it.identifier.len + i > file_size){
+                continue;
+            }
+
+            if (strncmp(it.identifier.str, file_in + i, it.identifier.len) != 0) {
+                continue;
+            }
+
+            yu_sb_cat_cstr(&file_out, it.formatted_color);
+
+            i += it.identifier.len; //skips the portion that corresponds to the color string in the color table
+        }
+        yu_da_append(&file_out, file_in[i]);
+    }
+
+    fwrite(file_out.items, file_out.len - 1, 1, fout);
+    free(file_out.items);
+    fclose(fout);
+    free(file_in);
 
     for (size_t i = 0; i < table.len; ++i) {
         free((void *)table.items[i].formatted_color);
     }
+
     free(table.items);
     free(file);
     return ret;
