@@ -7,6 +7,9 @@
 color-sub: color-sub.c
 	gcc -fsanitize=address -fsanitize=undefined -Wall -Wextra -pedantic -O0 -g3 -ggdb -o ../bin/color-sub color-sub.c
 
+color-sub2: color-sub2.c
+	gcc -fsanitize=address -fsanitize=undefined -Wall -Wextra -pedantic -O0 -g3 -ggdb -o ../bin/color-sub2 color-sub2.c
+
 color-get: color-get.c ../thirdparty/stb_image_write.o ../thirdparty/stb_image.o
 	gcc -I../thirdparty -fsanitize=address -fsanitize=undefined -Wall -Wextra -pedantic -O0 -g3 -ggdb -o ../bin/color-get color-get.c ../thirdparty/stb_image_write.o ../thirdparty/stb_image.o -lm
 

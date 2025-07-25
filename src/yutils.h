@@ -213,6 +213,9 @@ void yu_warn(const char *str, ...);
 void yu_errorf(FILE *f, const char *str, ...);
 void yu_error(const char *str, ...);
 
+void yu_fatalf(FILE *f, const char *str, ...);
+void yu_fatal(const char *str, ...);
+
 char* yu_read_entire_file(const char *path, u64 *len_out);
 char* yu_read_entire_filef(FILE *f, u64 *len_out);
 
@@ -226,6 +229,7 @@ void yu_sb_cat_sv(yu_sb *sb, const yu_sv sv);
 const char* yu_sb_as_cstr(yu_sb *sb);
 yu_sv yu_sv_chop(yu_sv *sv, const char delim);
 yu_sv yu_sv_chops(yu_sv *sv, const char *delims);
+void yu_sv_trim(yu_sv *sv);
 const char *yu_str_tmp(const char *fmt, ...);
 u64 yu_xor64_u64(yu_xor64_state *state);
 f64 yu_xor64_f64(yu_xor64_state *state, f64 min, f64 max);
@@ -324,6 +328,37 @@ void yu_error(const char *str, ...) {
     vfprintf(stderr, str, ap);
     fprintf(stderr, "\n");
     va_end(ap);
+}
+
+void yu_fatalf(FILE *f, const char *str, ...) {
+    if (!f) {
+        yu_error("File `f` is NULL, can't log to a NULL file");
+        return;
+    }
+
+    if (!str)
+        return;
+
+    va_list ap;
+    va_start(ap, str);
+    fprintf(f, "[ %s ][ ERROR ] ", yu_get_date());
+    vfprintf(f, str, ap);
+    fprintf(f, "\n");
+    va_end(ap);
+    exit(1);
+}
+
+void yu_fatal(const char *str, ...) {
+    if (!str)
+        return;
+
+    va_list ap;
+    va_start(ap, str);
+    fprintf(stderr, "[ %s ][ ERROR ] ", yu_get_date());
+    vfprintf(stderr, str, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+    exit(1);
 }
 
 char* yu_read_entire_file(const char *path, u64 *len_out) {
@@ -551,6 +586,14 @@ yu_sv yu_sv_chops(yu_sv *sv, const char *delims) {
 
     return ret;
 }
+
+void yu_sv_trim(yu_sv *sv) {
+    for (u64 i = 0; i < sv->len && *sv->str == ' '; ++i, --sv->len, ++sv->str) {
+    }
+    for (u64 i = sv->len; i-- > 0 && sv->str[i] == ' '; --sv->len) {
+    }
+}
+
 
 const char* yu_str_tmp(const char *fmt, ...) {
     static char strs[YU_MAX_STRS_TMP][YU_MAX_STR_TMP_LEN];
