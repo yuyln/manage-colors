@@ -238,16 +238,13 @@ int main(int argc, const char **argv) {
     int ret = 0;
     Table table = {0};
     const char *program = nob_shift(argv, argc);
-    YU_UNUSED(program);
-    //if (argc != 3) {
-    //    yu_error("Usage: %s <color table> <to modify file> <output>", program);
-    //    return 1;
-    //}
-    const char *color_table_dir = "../test/color.table";//nob_shift(argv, argc);
-    const char *to_change_dir = "../test/test.in";//nob_shift(argv, argc);
-    const char *output_dir = "../test/test.out";//nob_shift(argv, argc);
-    YU_UNUSED(to_change_dir);
-    YU_UNUSED(output_dir);
+    if (argc != 3) {
+        yu_error("Usage: %s <color table> <to modify file> <output>", program);
+        return 1;
+    }
+    const char *color_table_dir = nob_shift(argv, argc);
+    const char *to_change_dir = nob_shift(argv, argc);
+    const char *output_dir = nob_shift(argv, argc);
 
     size_t file_size = 0;
     char *file = yu_read_entire_file(color_table_dir, &file_size);
@@ -256,7 +253,11 @@ int main(int argc, const char **argv) {
     while (ptr < file + file_size) {
         yu_sv ptr_sv = YU_SV_CSTR(ptr);
         yu_sv line = yu_sv_chop(&ptr_sv, '\n');
+        yu_sv_trim(&line);
         ptr += line.len + 1;
+        if (line.len == 0)
+            continue;
+
         Entry entry = parse_entry(&line);
         yu_da_append(&table, entry);
     }
