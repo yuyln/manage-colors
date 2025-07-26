@@ -294,7 +294,7 @@ int main(int argc, const char **argv) {
         yu_da_append(&file_out, file_in[i]);
     }
 
-    fwrite(file_out.items, file_out.len - 1, 1, fout);
+    fwrite(file_out.items, file_out.len, 1, fout);
     free(file_out.items);
     fclose(fout);
     free(file_in);
