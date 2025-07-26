@@ -99,7 +99,7 @@ Color parse_color(yu_sv color_str) {
         //because of endianess and user not providing alpha channel
         //+1 because of #
         if (color_str.len == (6 + 1)) {
-            yu_log("Color being interpreted as %.*s with no transparency", (int)color_str.len, color_str.str);
+            //yu_log("Color being interpreted as %.*s with no transparency", (int)color_str.len, color_str.str);
             ret.rgba = (ret.rgba << 8) | 0xff;
         }
     } else if (strncmp(color_str.str, "rgb", 3) == 0) {
