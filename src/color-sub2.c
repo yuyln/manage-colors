@@ -64,9 +64,9 @@ int create_dir_tree(const char *path) {
         yu_sb_cat_fmt(&path_to_mkdir, "%.*s", (int)len, path);
         head = strchr(head + 1, '/');
         if (mkdir(yu_sb_as_cstr(&path_to_mkdir), S_IRWXU | S_IRWXG | S_IROTH) < 0) {
-            if (errno == EEXIST && head == NULL) {
-                yu_warn("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
-            }
+//            if (errno == EEXIST && head == NULL) {
+//                yu_warn("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
+//            }
             if (errno != EEXIST) {
                 yu_error("Creation of directory \"%.*s\" failed: %s", (int)path_to_mkdir.len, path_to_mkdir.items, strerror(errno));
                 return errno;
