@@ -55,8 +55,6 @@ Color hsv_to_rgb(ColorHSV hsv) {
                0 * (2.0 / 3.0 <= hsv.h && hsv.h < 5.0 / 6.0) +
                0 * (5.0 / 6.0 <= hsv.h && hsv.h < 1);
 
-    yu_warn("%f %f | %f %f", C, X, r, g);
-
     double b = 0 * (0         <= hsv.h && hsv.h < 1.0 / 6.0) +
                0 * (1.0 / 6.0 <= hsv.h && hsv.h < 1.0 / 3.0) +
                X * (1.0 / 3.0 <= hsv.h && hsv.h < 0.5) +

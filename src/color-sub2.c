@@ -116,6 +116,44 @@ Color parse_color(yu_sv color_str) {
         ret.g = parse_color(gre_sv).a;
         ret.b = parse_color(blu_sv).a;
         ret.a = parse_color(alp_sv).a;
+    } else if (strncmp(color_str.str, "hsv", 3) == 0) {
+        yu_sv inside_paren = color_str;
+        yu_sv_chop(&inside_paren, '('); //dont write to inside_paren. yu_sv_chop modifies the first argument to be the sv after the delimiter. So this points to right after (
+        inside_paren = yu_sv_chop(&inside_paren, ')'); //write to inside_parem. yu_sv_chop returnrs a sv with the contents of first param up to the delimiter. So this ends right before )
+        yu_sv hue_sv = yu_sv_chop(&inside_paren, ',');
+        yu_sv sat_sv = yu_sv_chop(&inside_paren, ',');
+        yu_sv val_sv = inside_paren;
+        yu_sv alp_sv = YU_SV_CSTR("255");
+        if (*(color_str.str + 3) == 'a') {
+            val_sv = yu_sv_chop(&inside_paren, ',');
+            alp_sv = inside_paren;
+        }
+        yu_sv_trim(&hue_sv);
+        yu_sv_trim(&sat_sv);
+        yu_sv_trim(&val_sv);
+        yu_sv_trim(&alp_sv);
+        char *endptr = NULL;
+        ColorHSV hsv = {0};
+        hsv.h = strtod(hue_sv.str, &endptr);
+        if (endptr == (color_str.str) && hsv.h == 0) {
+            yu_error("Could not parse any value from \"%.*s\". Defaulting to 0x00", (int)hue_sv.len, hue_sv.str);
+            goto defer;
+        }
+        hsv.h = hsv.h > 1? hsv.h / 360.0: hsv.h;
+
+        hsv.s = strtod(sat_sv.str, &endptr);
+        if (endptr == (color_str.str) && hsv.s == 0) {
+            yu_error("Could not parse any value from \"%.*s\". Defaulting to 0x00", (int)sat_sv.len, sat_sv.str);
+            goto defer;
+        }
+
+        hsv.v = strtod(val_sv.str, &endptr);
+        if (endptr == (color_str.str) && hsv.v == 0) {
+            yu_error("Could not parse any value from \"%.*s\". Defaulting to 0x00", (int)val_sv.len, val_sv.str);
+            goto defer;
+        }
+        ret = hsv_to_rgb(hsv);
+        yu_error("%f %f %f", hsv.h, hsv.s, hsv.v);
     } else if (sstr_has_char(color_str.str, color_str.len, '.')) {
         char *endptr = NULL;
         ret.a = strtod(color_str.str, &endptr) * 0xff;
