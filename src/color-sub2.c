@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
+#define __COLOR_C_
+#include "color.h"
+
 #define __YUTILS_C_
 #include "yutils.h"
 
@@ -21,16 +24,6 @@
 
 //https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h
 #define nob_shift(xs, xs_sz) ((xs_sz)--, *(xs)++)
-
-typedef union {
-    u32 rgba;
-    struct { //little endian
-        u8 a;
-        u8 b;
-        u8 g;
-        u8 r;
-    };
-} Color;
 
 typedef struct {
     yu_sv identifier;
@@ -144,16 +137,6 @@ Color parse_color(yu_sv color_str) {
 
  defer:
     return ret;
-}
-
-int get_color_comp(Color color, char comp) {
-    switch (comp) {
-    case 'r': return color.r;
-    case 'g': return color.g;
-    case 'b': return color.b;
-    case 'a': return color.a;
-    default: return -1;
-    }
 }
 
 const char *format_color(yu_sv format, Color color) {
